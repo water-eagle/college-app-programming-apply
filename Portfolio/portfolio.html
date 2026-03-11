@@ -1,0 +1,638 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Portfolio</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      :root {
+        --sky: #7dd3fc;
+        --sky2: #38bdf8;
+        --bg: #0a0f1a;
+        --bg2: #111827;
+        --bg3: #1e293b;
+        --text: #f1f5f9;
+        --muted: #94a3b8;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: "Segoe UI", system-ui, sans-serif;
+        line-height: 1.6;
+      }
+
+      /* NAV */
+      nav {
+        position: fixed;
+        top: 0;
+        width: 100%;
+        background: rgba(10, 15, 26, 0.85);
+        backdrop-filter: blur(12px);
+        z-index: 100;
+        border-bottom: 1px solid rgba(125, 211, 252, 0.08);
+      }
+      .nav-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+      .logo {
+        font-size: 1.2rem;
+        font-weight: 700;
+        color: var(--sky);
+        letter-spacing: 0.05em;
+      }
+      .nav-links {
+        display: flex;
+        gap: 2rem;
+        list-style: none;
+      }
+      .nav-links a {
+        color: var(--muted);
+        text-decoration: none;
+        font-size: 0.9rem;
+        transition: 0.2s;
+      }
+      .nav-links a:hover {
+        color: var(--sky);
+      }
+
+      /* HERO */
+      #hero {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        padding: 6rem 2rem 4rem;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-bg {
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 80% 60% at 50% 40%,
+          rgba(56, 189, 248, 0.12) 0%,
+          transparent 70%
+        );
+      }
+      .hero-content {
+        position: relative;
+        z-index: 1;
+      }
+      .badge {
+        display: inline-block;
+        padding: 0.35rem 0.9rem;
+        border: 1px solid rgba(125, 211, 252, 0.3);
+        border-radius: 999px;
+        font-size: 0.8rem;
+        color: var(--sky);
+        margin-bottom: 1.5rem;
+        background: rgba(125, 211, 252, 0.06);
+      }
+      h1 {
+        font-size: clamp(2.5rem, 6vw, 4.5rem);
+        font-weight: 800;
+        line-height: 1.1;
+        margin-bottom: 1rem;
+      }
+      h1 span {
+        color: var(--sky);
+      }
+      .subtitle {
+        font-size: 1.15rem;
+        color: var(--muted);
+        max-width: 540px;
+        margin: 0 auto 2.5rem;
+      }
+      .btn-group {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+      .btn {
+        padding: 0.75rem 1.8rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        transition: 0.2s;
+      }
+      .btn-primary {
+        background: var(--sky2);
+        color: #0a0f1a;
+      }
+      .btn-primary:hover {
+        background: var(--sky);
+        transform: translateY(-2px);
+      }
+      .btn-outline {
+        border: 1px solid rgba(125, 211, 252, 0.4);
+        color: var(--sky);
+        background: transparent;
+      }
+      .btn-outline:hover {
+        background: rgba(125, 211, 252, 0.08);
+        transform: translateY(-2px);
+      }
+      .scroll-hint {
+        margin-top: 4rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        animation: bounce 2s infinite;
+      }
+      @keyframes bounce {
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(6px);
+        }
+      }
+
+      /* SECTIONS */
+      section {
+        padding: 6rem 2rem;
+      }
+      .section-inner {
+        max-width: 1100px;
+        margin: 0 auto;
+      }
+      .section-label {
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        color: var(--sky);
+        text-transform: uppercase;
+        margin-bottom: 0.6rem;
+      }
+      .section-title {
+        font-size: clamp(1.8rem, 4vw, 2.5rem);
+        font-weight: 800;
+        margin-bottom: 1rem;
+      }
+      .section-desc {
+        color: var(--muted);
+        max-width: 520px;
+        margin-bottom: 3.5rem;
+      }
+      .divider {
+        width: 48px;
+        height: 3px;
+        background: linear-gradient(90deg, var(--sky2), var(--sky));
+        border-radius: 2px;
+        margin-bottom: 1.5rem;
+      }
+
+      /* PROJECTS */
+      #projects {
+        background: var(--bg2);
+      }
+      .projects-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 1.5rem;
+      }
+      .card {
+        background: var(--bg3);
+        border: 1px solid rgba(125, 211, 252, 0.1);
+        border-radius: 16px;
+        padding: 2rem;
+        transition: 0.3s;
+        position: relative;
+        overflow: hidden;
+      }
+      .card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          135deg,
+          rgba(125, 211, 252, 0.05),
+          transparent
+        );
+        opacity: 0;
+        transition: 0.3s;
+      }
+      .card:hover {
+        border-color: rgba(125, 211, 252, 0.35);
+        transform: translateY(-4px);
+      }
+      .card:hover::before {
+        opacity: 1;
+      }
+      .card-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        background: rgba(125, 211, 252, 0.12);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        margin-bottom: 1.2rem;
+      }
+      .card h3 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        margin-bottom: 0.6rem;
+      }
+      .card p {
+        color: var(--muted);
+        font-size: 0.9rem;
+        margin-bottom: 1.2rem;
+      }
+      .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+      .tag {
+        padding: 0.25rem 0.7rem;
+        border-radius: 999px;
+        font-size: 0.75rem;
+        background: rgba(125, 211, 252, 0.1);
+        color: var(--sky);
+        border: 1px solid rgba(125, 211, 252, 0.2);
+      }
+      .card-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        color: var(--sky);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-decoration: none;
+        margin-top: 1rem;
+        transition: 0.2s;
+      }
+      .card-link:hover {
+        gap: 0.7rem;
+      }
+
+      /* SKILLS */
+      .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 1.5rem;
+      }
+      .skill-group {
+        background: var(--bg2);
+        border: 1px solid rgba(125, 211, 252, 0.08);
+        border-radius: 14px;
+        padding: 1.5rem;
+      }
+      .skill-group h4 {
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: var(--sky);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 1.2rem;
+      }
+      .skill-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.6rem;
+      }
+      .skill-badge {
+        padding: 0.4rem 0.9rem;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        background: var(--bg3);
+        border: 1px solid rgba(125, 211, 252, 0.12);
+        color: var(--text);
+        font-weight: 500;
+      }
+
+      /* VALUES */
+      #values {
+        background: var(--bg2);
+      }
+      .values-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        gap: 1.2rem;
+      }
+      .value-card {
+        border-left: 3px solid var(--sky2);
+        padding: 1.4rem 1.6rem;
+        background: rgba(125, 211, 252, 0.04);
+        border-radius: 0 12px 12px 0;
+      }
+      .value-card h4 {
+        font-size: 1rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+      }
+      .value-card p {
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+
+      /* CONTACT */
+      .contact-box {
+        background: var(--bg2);
+        border: 1px solid rgba(125, 211, 252, 0.15);
+        border-radius: 20px;
+        padding: 3.5rem;
+        text-align: center;
+        max-width: 640px;
+        margin: 0 auto;
+        position: relative;
+        overflow: hidden;
+      }
+      .contact-box::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(
+          ellipse 60% 50% at 50% 0%,
+          rgba(56, 189, 248, 0.1),
+          transparent
+        );
+      }
+      .contact-box h3 {
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 0.8rem;
+        position: relative;
+      }
+      .contact-box p {
+        color: var(--muted);
+        margin-bottom: 2rem;
+        position: relative;
+      }
+      .contact-links {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+        position: relative;
+      }
+      .contact-link {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.65rem 1.4rem;
+        border-radius: 10px;
+        text-decoration: none;
+        font-size: 0.9rem;
+        font-weight: 600;
+        border: 1px solid rgba(125, 211, 252, 0.25);
+        color: var(--sky);
+        background: rgba(125, 211, 252, 0.06);
+        transition: 0.2s;
+      }
+      .contact-link:hover {
+        background: rgba(125, 211, 252, 0.14);
+        transform: translateY(-2px);
+      }
+
+      /* FOOTER */
+      footer {
+        text-align: center;
+        padding: 2rem;
+        color: var(--muted);
+        font-size: 0.85rem;
+        border-top: 1px solid rgba(125, 211, 252, 0.06);
+      }
+
+      /* FADE IN */
+      .fade {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+          opacity 0.6s ease,
+          transform 0.6s ease;
+      }
+      .fade.visible {
+        opacity: 1;
+        transform: none;
+      }
+    </style>
+  </head>
+  <body>
+    <nav>
+      <div class="nav-inner">
+        <div class="logo">&lt;YourName /&gt;</div>
+        <ul class="nav-links">
+          <li><a href="#projects">프로젝트</a></li>
+          <li><a href="#skills">스킬</a></li>
+          <li><a href="#values">가치관</a></li>
+          <li><a href="#contact">연락처</a></li>
+        </ul>
+      </div>
+    </nav>
+
+    <!-- HERO -->
+    <section id="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="badge">✦ Available for work</div>
+        <h1>안녕하세요, 저는<br /><span>홍길동</span>입니다</h1>
+        <p class="subtitle">
+          사용자 경험을 중심으로 생각하는 풀스택 개발자입니다. 코드로 아이디어를
+          현실로 만듭니다.
+        </p>
+        <div class="btn-group">
+          <a href="#projects" class="btn btn-primary">프로젝트 보기</a>
+          <a href="#contact" class="btn btn-outline">연락하기</a>
+        </div>
+        <div class="scroll-hint">↓ 스크롤해서 더 보기</div>
+      </div>
+    </section>
+
+    <!-- PROJECTS -->
+    <section id="projects">
+      <div class="section-inner">
+        <div class="fade">
+          <div class="section-label">Projects</div>
+          <div class="divider"></div>
+          <h2 class="section-title">주요 프로젝트</h2>
+          <p class="section-desc">
+            실제로 만들고 배포한 프로젝트들을 소개합니다.
+          </p>
+        </div>
+        <div class="projects-grid">
+          <div class="card fade">
+            <div class="card-icon">🛒</div>
+            <h3>이커머스 플랫폼</h3>
+            <p>실시간 재고 관리와 결제 시스템을 포함한 풀스택 쇼핑몰 서비스</p>
+            <div class="tags">
+              <span class="tag">Next.js</span><span class="tag">TypeScript</span
+              ><span class="tag">PostgreSQL</span>
+            </div>
+            <a href="#" class="card-link">자세히 보기 →</a>
+          </div>
+          <div class="card fade">
+            <div class="card-icon">📊</div>
+            <h3>데이터 시각화 대시보드</h3>
+            <p>복잡한 데이터를 직관적인 차트와 그래프로 표현하는 분석 툴</p>
+            <div class="tags">
+              <span class="tag">React</span><span class="tag">D3.js</span
+              ><span class="tag">Python</span>
+            </div>
+            <a href="#" class="card-link">자세히 보기 →</a>
+          </div>
+          <div class="card fade">
+            <div class="card-icon">🤖</div>
+            <h3>AI 챗봇 서비스</h3>
+            <p>LLM 기반 고객 응대 자동화 챗봇 — 응답 정확도 92% 달성</p>
+            <div class="tags">
+              <span class="tag">Node.js</span><span class="tag">LangChain</span
+              ><span class="tag">Redis</span>
+            </div>
+            <a href="#" class="card-link">자세히 보기 →</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SKILLS -->
+    <section id="skills">
+      <div class="section-inner">
+        <div class="fade">
+          <div class="section-label">Skills</div>
+          <div class="divider"></div>
+          <h2 class="section-title">기술 스택</h2>
+          <p class="section-desc">
+            다양한 환경에서 프로덕트를 만들어 온 경험을 바탕으로 합니다.
+          </p>
+        </div>
+        <div class="skills-grid fade">
+          <div class="skill-group">
+            <h4>Frontend</h4>
+            <div class="skill-list">
+              <span class="skill-badge">React</span>
+              <span class="skill-badge">Next.js</span>
+              <span class="skill-badge">TypeScript</span>
+              <span class="skill-badge">Tailwind CSS</span>
+              <span class="skill-badge">Vue.js</span>
+            </div>
+          </div>
+          <div class="skill-group">
+            <h4>Backend</h4>
+            <div class="skill-list">
+              <span class="skill-badge">Node.js</span>
+              <span class="skill-badge">Python</span>
+              <span class="skill-badge">FastAPI</span>
+              <span class="skill-badge">GraphQL</span>
+              <span class="skill-badge">REST API</span>
+            </div>
+          </div>
+          <div class="skill-group">
+            <h4>Infra / DB</h4>
+            <div class="skill-list">
+              <span class="skill-badge">PostgreSQL</span>
+              <span class="skill-badge">Redis</span>
+              <span class="skill-badge">AWS</span>
+              <span class="skill-badge">Docker</span>
+              <span class="skill-badge">Vercel</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VALUES -->
+    <section id="values">
+      <div class="section-inner">
+        <div class="fade">
+          <div class="section-label">Values</div>
+          <div class="divider"></div>
+          <h2 class="section-title">나의 가치관</h2>
+          <p class="section-desc">
+            코드를 작성할 때, 그리고 사람을 대할 때 지키는 원칙들입니다.
+          </p>
+        </div>
+        <div class="values-grid fade">
+          <div class="value-card">
+            <h4>🎯 사용자 중심</h4>
+            <p>
+              기술보다 사람이 먼저입니다. 사용자의 불편을 해소하는 것이 개발의
+              출발점입니다.
+            </p>
+          </div>
+          <div class="value-card">
+            <h4>🔍 명료한 코드</h4>
+            <p>
+              읽기 쉬운 코드가 좋은 코드입니다. 미래의 동료를 배려하며
+              작성합니다.
+            </p>
+          </div>
+          <div class="value-card">
+            <h4>🚀 지속적 성장</h4>
+            <p>어제보다 나은 오늘을 지향합니다. 배움을 멈추지 않습니다.</p>
+          </div>
+          <div class="value-card">
+            <h4>🤝 함께하는 개발</h4>
+            <p>혼자 빠르게보다, 함께 멀리 가는 것을 선호합니다.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section id="contact">
+      <div class="section-inner">
+        <div class="fade">
+          <div class="section-label">Contact</div>
+          <div class="divider"></div>
+          <h2
+            class="section-title"
+            style="text-align: center; margin-bottom: 2.5rem"
+          >
+            함께 일해요
+          </h2>
+        </div>
+        <div class="contact-box fade">
+          <h3>새로운 기회를 기다립니다 👋</h3>
+          <p>프로젝트 협업, 채용 제안, 혹은 그냥 안녕 인사도 환영합니다.</p>
+          <div class="contact-links">
+            <a href="mailto:hello@example.com" class="contact-link"
+              >✉️ 이메일</a
+            >
+            <a href="https://github.com" target="_blank" class="contact-link"
+              >🐙 GitHub</a
+            >
+            <a href="https://linkedin.com" target="_blank" class="contact-link"
+              >💼 LinkedIn</a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2026 홍길동 · Crafted with ☕ and 코드</p>
+    </footer>
+
+    <script>
+      const obs = new IntersectionObserver(
+        (els) => {
+          els.forEach((e) => {
+            if (e.isIntersecting) e.target.classList.add("visible");
+          });
+        },
+        { threshold: 0.15 },
+      );
+      document.querySelectorAll(".fade").forEach((el) => obs.observe(el));
+    </script>
+  </body>
+</html>
