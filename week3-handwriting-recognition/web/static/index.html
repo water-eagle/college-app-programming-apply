@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Handwriting Recognition</title>
+    <link rel="stylesheet" href="style.css">
+    <!-- Google Fonts for Modern Typography -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="app-container">
+        <header class="header">
+            <h1>Handwriting Recognition</h1>
+            <p>Draw a digit (0 - 9) on the canvas below</p>
+        </header>
+        
+        <main class="main-content">
+            <div class="canvas-wrapper">
+                <canvas id="drawingCanvas" width="280" height="280"></canvas>
+            </div>
+            
+            <div class="controls">
+                <button id="clearBtn" class="btn btn-secondary">Clear</button>
+                <button id="recognizeBtn" class="btn btn-primary">Recognize</button>
+            </div>
+            
+            <div class="result-box">
+                <span id="resultText">Prediction will appear here</span>
+                <h2 id="predictedValue">-</h2>
+            </div>
+            
+            <!-- Loading overlay inside the container -->
+            <div id="loader" class="loader hidden">
+                <div class="spinner"></div>
+                <span>Analyzing...</span>
+            </div>
+        </main>
+        
+        <footer>
+            <p>Powered by Scikit-Learn Support Vector Machine</p>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
