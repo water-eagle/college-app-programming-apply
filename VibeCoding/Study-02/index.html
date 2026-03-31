@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="TodoFlow — 깔끔한 할 일 관리 앱" />
+  <title>TodoFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+  <style>
+    /* ─────────────────────────────────────────
+       1. CSS Custom Properties — 색상 시스템
+       ───────────────────────────────────────── */
+    :root {
+      /* 기본 팔레트 */
+      --color-bg:          #F8FAFC;
+      --color-surface:     #FFFFFF;
+      --color-border:      #E2E8F0;
+      --color-border-light:#F1F5F9;
+      --color-text:        #1E293B;
+      --color-text-muted:  #64748B;
+      --color-text-faint:  #94A3B8;
+
+      /* 브랜드 */
+      --color-primary:     #6366F1;
+      --color-primary-soft:#EEF2FF;
+
+      /* 카테고리 — work (파랑) */
+      --color-work:        #3B82F6;
+      --color-work-badge:  #DBEAFE;
+      --color-work-text:   #1D4ED8;
+
+      /* 카테고리 — personal (초록) */
+      --color-personal:     #10B981;
+      --color-personal-badge:#D1FAE5;
+      --color-personal-text: #065F46;
+
+      /* 카테고리 — study (보라) */
+      --color-study:        #8B5CF6;
+      --color-study-badge:  #EDE9FE;
+      --color-study-text:   #5B21B6;
+
+      /* 타이포그래피 */
+      --font-base: 'Inter', system-ui, sans-serif;
+
+      /* 레이아웃 */
+      --max-width:  640px;
+      --space-xs:   4px;
+      --space-sm:   8px;
+      --space-md:   16px;
+      --space-lg:   24px;
+      --space-xl:   32px;
+
+      /* 반경 */
+      --radius-sm:  6px;
+      --radius-md:  12px;
+      --radius-lg:  16px;
+      --radius-full: 9999px;
+
+      /* 그림자 */
+      --shadow-sm:  0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
+      --shadow-md:  0 4px 12px rgba(0,0,0,.08);
+      --shadow-card:0 0 0 1px var(--color-border), 0 2px 8px rgba(0,0,0,.06);
+    }
+
+    /* ─────────────────────────────────────────
+       2. 리셋 & 기본
+       ───────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-base);
+      background: var(--color-bg);
+      color: var(--color-text);
+      min-height: 100vh;
+      min-width: 320px;
+      line-height: 1.6;
+    }
+
+    /* ─────────────────────────────────────────
+       3. 앱 래퍼 — 최대 너비·중앙 정렬
+       ───────────────────────────────────────── */
+    .app-wrapper {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--space-md);
+    }
+
+    /* ─────────────────────────────────────────
+       4. HEADER — 타이틀 + 오늘 날짜
+       ───────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: var(--space-lg) 0 var(--space-md);
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: var(--space-lg);
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+
+    .header-logo {
+      width: 36px;
+      height: 36px;
+      background: var(--color-primary);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .header-logo svg {
+      width: 20px;
+      height: 20px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .header-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--color-text);
+    }
+
+    .header-title span {
+      color: var(--color-primary);
+    }
+
+    .header-date {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 1px;
+    }
+
+    .header-date .date-weekday {
+      font-size: .7rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--color-primary);
+    }
+
+    .header-date .date-full {
+      font-size: .85rem;
+      font-weight: 500;
+      color: var(--color-text-muted);
+    }
+
+    /* ─────────────────────────────────────────
+       5. PROGRESS 섹션
+       ───────────────────────────────────────── */
+    .section-progress {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+    }
+
+    .progress-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: var(--space-md);
+    }
+
+    .progress-label {
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .progress-pct {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--color-primary);
+    }
+
+    .progress-bar-track {
+      height: 10px;
+      background: var(--color-border-light);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      margin-bottom: var(--space-md);
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 25%;          /* 하드코딩 예시 값 — JS 단계에서 동적 계산 */
+      background: linear-gradient(90deg, var(--color-primary) 0%, #818CF8 100%);
+      border-radius: var(--radius-full);
+      transition: width .4s ease;
+    }
+
+    .progress-stats {
+      display: flex;
+      gap: var(--space-md);
+    }
+
+    .stat-chip {
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      font-size: .8rem;
+      color: var(--color-text-muted);
+    }
+
+    .stat-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+
+    .stat-dot--done   { background: var(--color-primary); }
+    .stat-dot--remain { background: var(--color-border); }
+
+    /* ─────────────────────────────────────────
+       6. INPUT 섹션
+       ───────────────────────────────────────── */
+    .section-input {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: var(--space-lg);
+      margin-bottom: var(--space-md);
+    }
+
+    .input-section-title {
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+      margin-bottom: var(--space-md);
+    }
+
+    form.todo-form {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    .form-row {
+      display: flex;
+      gap: var(--space-sm);
+    }
+
+    .form-control {
+      flex: 1;
+      padding: var(--space-sm) var(--space-md);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-base);
+      font-size: .9rem;
+      color: var(--color-text);
+      background: var(--color-bg);
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    .form-control:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-soft);
+    }
+
+    .form-control::placeholder {
+      color: var(--color-text-faint);
+    }
+
+    .form-select {
+      padding: var(--space-sm) var(--space-md);
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-base);
+      font-size: .9rem;
+      color: var(--color-text);
+      background: var(--color-bg);
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      -webkit-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 32px;
+      transition: border-color .15s;
+    }
+
+    .form-select:focus { border-color: var(--color-primary); }
+
+    .btn-add {
+      padding: var(--space-sm) var(--space-lg);
+      background: var(--color-primary);
+      color: #fff;
+      border: none;
+      border-radius: var(--radius-md);
+      font-family: var(--font-base);
+      font-size: .9rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: var(--space-xs);
+      white-space: nowrap;
+      transition: background .15s, transform .1s;
+    }
+
+    .btn-add:hover  { background: #4F46E5; }
+    .btn-add:active { transform: scale(.97); }
+
+    /* ─────────────────────────────────────────
+       7. FILTER 탭 섹션
+       ───────────────────────────────────────── */
+    .section-filter {
+      display: flex;
+      gap: var(--space-xs);
+      margin-bottom: var(--space-md);
+      overflow-x: auto;
+      padding-bottom: 2px;         /* 스크롤바 공간 */
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    .section-filter::-webkit-scrollbar { display: none; }
+
+    .filter-tab {
+      padding: 6px 14px;
+      border: 1.5px solid var(--color-border);
+      border-radius: var(--radius-full);
+      font-family: var(--font-base);
+      font-size: .8rem;
+      font-weight: 500;
+      background: var(--color-surface);
+      color: var(--color-text-muted);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all .15s;
+    }
+
+    .filter-tab:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .filter-tab.active {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+      color: #fff;
+      box-shadow: var(--shadow-sm);
+    }
+
+    /* ─────────────────────────────────────────
+       8. TODO LIST
+       ───────────────────────────────────────── */
+    .section-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--space-sm);
+    }
+
+    .list-title {
+      font-size: .8rem;
+      font-weight: 600;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      color: var(--color-text-muted);
+    }
+
+    .list-count {
+      font-size: .75rem;
+      font-weight: 500;
+      color: var(--color-text-faint);
+      background: var(--color-border-light);
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+
+    ul.todo-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-sm);
+    }
+
+    /* ─────────────────────────────────────────
+       8-1. 할 일 카드 (todo-item)
+       ───────────────────────────────────────── */
+    .todo-item {
+      background: var(--color-surface);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-card);
+      padding: var(--space-md);
+      display: flex;
+      align-items: flex-start;
+      gap: var(--space-md);
+      transition: box-shadow .15s, transform .15s;
+    }
+
+    .todo-item:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    /* 완료된 카드 */
+    .todo-item.done {
+      opacity: .6;
+    }
+
+    .todo-item.done .todo-text {
+      text-decoration: line-through;
+      color: var(--color-text-muted);
+    }
+
+    /* 체크박스 */
+    .todo-check {
+      width: 22px;
+      height: 22px;
+      border: 2px solid var(--color-border);
+      border-radius: var(--radius-sm);
+      flex-shrink: 0;
+      margin-top: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background .15s, border-color .15s;
+    }
+
+    .todo-item.done .todo-check {
+      background: var(--color-primary);
+      border-color: var(--color-primary);
+    }
+
+    .todo-check svg {
+      width: 13px;
+      height: 13px;
+      stroke: #fff;
+      fill: none;
+      stroke-width: 2.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: none;
+    }
+
+    .todo-item.done .todo-check svg { display: block; }
+
+    /* 본문 */
+    .todo-body { flex: 1; min-width: 0; }
+
+    .todo-text {
+      font-size: .95rem;
+      font-weight: 500;
+      color: var(--color-text);
+      margin-bottom: 6px;
+      word-break: break-word;
+    }
+
+    .todo-meta {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      flex-wrap: wrap;
+    }
+
+    /* 카테고리 배지 */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 10px;
+      border-radius: var(--radius-full);
+      font-size: .72rem;
+      font-weight: 600;
+      letter-spacing: .03em;
+    }
+
+    .badge-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+
+    /* work */
+    .badge--work {
+      background: var(--color-work-badge);
+      color: var(--color-work-text);
+    }
+    .badge--work .badge-dot { background: var(--color-work); }
+
+    /* personal */
+    .badge--personal {
+      background: var(--color-personal-badge);
+      color: var(--color-personal-text);
+    }
+    .badge--personal .badge-dot { background: var(--color-personal); }
+
+    /* study */
+    .badge--study {
+      background: var(--color-study-badge);
+      color: var(--color-study-text);
+    }
+    .badge--study .badge-dot { background: var(--color-study); }
+
+    /* 날짜 칩 */
+    .meta-date {
+      font-size: .72rem;
+      color: var(--color-text-faint);
+      font-weight: 500;
+    }
+
+    /* 삭제 버튼 */
+    .btn-delete {
+      width: 30px;
+      height: 30px;
+      border: none;
+      background: transparent;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--color-text-faint);
+      transition: background .15s, color .15s;
+      flex-shrink: 0;
+    }
+
+    .btn-delete:hover {
+      background: #FEE2E2;
+      color: #EF4444;
+    }
+
+    .btn-delete svg {
+      width: 15px;
+      height: 15px;
+      stroke: currentColor;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    /* ─────────────────────────────────────────
+       9. 빈 목록 메시지
+       ───────────────────────────────────────── */
+    .empty-state {
+      text-align: center;
+      padding: var(--space-xl) var(--space-md);
+      color: var(--color-text-faint);
+      font-size: .875rem;
+    }
+
+    .empty-state svg {
+      width: 48px;
+      height: 48px;
+      stroke: var(--color-border);
+      fill: none;
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      margin-bottom: var(--space-md);
+    }
+
+    /* ─────────────────────────────────────────
+       10. FOOTER
+       ───────────────────────────────────────── */
+    footer {
+      text-align: center;
+      padding: var(--space-xl) 0 var(--space-lg);
+      font-size: .75rem;
+      color: var(--color-text-faint);
+    }
+
+    /* ─────────────────────────────────────────
+       11. 반응형 — 320px 지원
+       ───────────────────────────────────────── */
+    @media (max-width: 400px) {
+      .header-title { font-size: 1.05rem; }
+      .form-row    { flex-direction: column; }
+      .btn-add     { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-wrapper">
+
+  <!-- ─── HEADER ─────────────────────────────── -->
+  <header>
+    <div class="header-brand">
+      <div class="header-logo" aria-hidden="true">
+        <!-- 체크리스트 아이콘 -->
+        <svg viewBox="0 0 24 24">
+          <path d="M9 11l3 3L22 4"/>
+          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+        </svg>
+      </div>
+      <h1 class="header-title">Todo<span>Flow</span></h1>
+    </div>
+
+    <div class="header-date" aria-label="오늘 날짜">
+      <span class="date-weekday">화요일</span>
+      <span class="date-full">2026년 3월 24일</span>
+    </div>
+  </header>
+
+  <!-- ─── PROGRESS 섹션 ──────────────────────── -->
+  <section class="section-progress" aria-label="오늘 진행률">
+    <div class="progress-header">
+      <span class="progress-label">오늘의 진행률</span>
+      <span class="progress-pct" id="progress-pct">25%</span>
+    </div>
+
+    <div class="progress-bar-track" role="progressbar" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">
+      <div class="progress-bar-fill" id="progress-bar-fill"></div>
+    </div>
+
+    <div class="progress-stats">
+      <div class="stat-chip">
+        <span class="stat-dot stat-dot--done"></span>
+        <span>완료 1개</span>
+      </div>
+      <div class="stat-chip">
+        <span class="stat-dot stat-dot--remain"></span>
+        <span>남은 3개</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ─── INPUT 섹션 ─────────────────────────── -->
+  <section class="section-input" aria-label="할 일 추가">
+    <p class="input-section-title">새 할 일 추가</p>
+
+    <form class="todo-form" id="todo-form" action="#" onsubmit="return false;">
+      <input
+        id="todo-input"
+        class="form-control"
+        type="text"
+        placeholder="할 일을 입력하세요…"
+        autocomplete="off"
+        aria-label="할 일 내용"
+      />
+      <div class="form-row">
+        <select class="form-select" id="category-select" aria-label="카테고리 선택">
+          <option value="work">💼 업무</option>
+          <option value="personal">🏠 개인</option>
+          <option value="study">📚 공부</option>
+        </select>
+        <button class="btn-add" type="submit" id="btn-add">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+               stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round"
+               aria-hidden="true">
+            <line x1="12" y1="5" x2="12" y2="19"/>
+            <line x1="5" y1="12" x2="19" y2="12"/>
+          </svg>
+          추가
+        </button>
+      </div>
+    </form>
+  </section>
+
+  <!-- ─── FILTER 탭 ──────────────────────────── -->
+  <section class="section-filter" role="tablist" aria-label="카테고리 필터">
+    <button class="filter-tab active" role="tab" aria-selected="true"  id="tab-all"      data-filter="all">전체</button>
+    <button class="filter-tab"        role="tab" aria-selected="false" id="tab-work"     data-filter="work">💼 업무</button>
+    <button class="filter-tab"        role="tab" aria-selected="false" id="tab-personal" data-filter="personal">🏠 개인</button>
+    <button class="filter-tab"        role="tab" aria-selected="false" id="tab-study"    data-filter="study">📚 공부</button>
+    <button class="filter-tab"        role="tab" aria-selected="false" id="tab-done"     data-filter="done">✅ 완료</button>
+  </section>
+
+  <!-- ─── TODO LIST ──────────────────────────── -->
+  <div class="section-list-header">
+    <span class="list-title">할 일 목록</span>
+    <span class="list-count" id="list-count">4개</span>
+  </div>
+
+  <ul class="todo-list" id="todo-list" aria-label="할 일 목록">
+
+    <!-- ★ 하드코딩 예시 항목 (Step 2에서 삭제 예정) ★ -->
+
+    <!-- 완료된 항목 — work -->
+    <li class="todo-item done" data-category="work">
+      <div class="todo-check" aria-label="완료됨">
+        <svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="todo-body">
+        <p class="todo-text">프로젝트 기획서 초안 작성</p>
+        <div class="todo-meta">
+          <span class="badge badge--work"><span class="badge-dot"></span>업무</span>
+          <span class="meta-date">2026.03.24</span>
+        </div>
+      </div>
+      <button class="btn-delete" aria-label="삭제">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </li>
+
+    <!-- 미완료 — personal -->
+    <li class="todo-item" data-category="personal">
+      <div class="todo-check" aria-label="미완료"></div>
+      <div class="todo-body">
+        <p class="todo-text">장 보기 — 우유, 달걀, 채소</p>
+        <div class="todo-meta">
+          <span class="badge badge--personal"><span class="badge-dot"></span>개인</span>
+          <span class="meta-date">2026.03.24</span>
+        </div>
+      </div>
+      <button class="btn-delete" aria-label="삭제">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </li>
+
+    <!-- 미완료 — study -->
+    <li class="todo-item" data-category="study">
+      <div class="todo-check" aria-label="미완료"></div>
+      <div class="todo-body">
+        <p class="todo-text">알고리즘 문제 3문제 풀기</p>
+        <div class="todo-meta">
+          <span class="badge badge--study"><span class="badge-dot"></span>공부</span>
+          <span class="meta-date">2026.03.24</span>
+        </div>
+      </div>
+      <button class="btn-delete" aria-label="삭제">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </li>
+
+    <!-- 미완료 — work -->
+    <li class="todo-item" data-category="work">
+      <div class="todo-check" aria-label="미완료"></div>
+      <div class="todo-body">
+        <p class="todo-text">팀 주간 회의 자료 준비</p>
+        <div class="todo-meta">
+          <span class="badge badge--work"><span class="badge-dot"></span>업무</span>
+          <span class="meta-date">2026.03.24</span>
+        </div>
+      </div>
+      <button class="btn-delete" aria-label="삭제">
+        <svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+      </button>
+    </li>
+
+  </ul>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>TodoFlow &mdash; Step 1: HTML 구조 + CSS 레이아웃</p>
+  </footer>
+
+</div><!-- /.app-wrapper -->
+
+<!-- JS는 Step 2에서 추가 예정 -->
+</body>
+</html>
