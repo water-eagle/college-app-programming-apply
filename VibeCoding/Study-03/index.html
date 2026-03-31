@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vibe Quiz - 지식 대백과</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- 메인 헤더 -->
+        <header>
+            <h1>Vibe Quiz</h1>
+            <p class="subtitle">지식을 테스트하고 점수를 쌓아보세요!</p>
+        </header>
+
+        <!-- 시작 화면: 카테고리 선택 -->
+        <div id="start-screen" class="screen">
+            <h2>카테고리를 선택하세요</h2>
+            <div id="category-buttons" class="button-grid">
+                <button class="btn category-btn" data-category="all">전체 풀기</button>
+            </div>
+        </div>
+
+        <!-- 퀴즈 화면 -->
+        <div id="quiz-screen" class="screen hidden">
+            <div class="quiz-header">
+                <div class="header-left">
+                    <span id="category-tag" class="badge">카테고리</span>
+                    <span id="progress-text">문제 1 / 10</span>
+                </div>
+                <div class="header-right">
+                    <span id="current-score">점수: 0</span>
+                    <button id="exit-btn" class="btn-icon" title="퀴즈 종료">✕</button>
+                </div>
+            </div>
+            
+            <div class="question-container">
+                <h3 id="question-text">질문 내용이 여기에 표시됩니다.</h3>
+                <div id="options-container" class="options-grid">
+                    <!-- 버튼들이 동적으로 생성됨 -->
+                </div>
+            </div>
+
+            <!-- 피드백 영역 -->
+            <div id="feedback-container" class="feedback-panel hidden">
+                <div id="feedback-result" class="result-text">정답입니다!</div>
+                <p id="explanation-text" class="explanation">해설 내용이 여기에 표시됩니다.</p>
+                <div class="feedback-footer">
+                    <div class="next-guide">[Enter]를 누르거나 버튼을 클릭하세요.</div>
+                    <button id="next-btn" class="btn primary-btn small">다음 문제로</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 결과 화면 -->
+        <div id="result-screen" class="screen hidden">
+            <h2>퀴즈 완료!</h2>
+            <div class="result-card">
+                <div class="final-score-circle">
+                    <span id="final-score">0</span>
+                    <span class="score-unit">점</span>
+                </div>
+                <p id="final-stats">맞힌 개수: 0 / 0</p>
+            </div>
+            <button id="restart-btn" class="btn primary-btn">다시 시작하기</button>
+        </div>
+    </div>
+
+    <script src="quiz-game.js"></script>
+</body>
+</html>

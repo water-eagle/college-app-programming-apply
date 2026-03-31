@@ -1,0 +1,217 @@
+:root {
+    --bg-color: #f8f9fa;
+    --card-bg: #ffffff;
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --accent-color: #4cc9f0;
+    --text-main: #212529;
+    --text-muted: #6c757d;
+    --success-color: #2ec4b6;
+    --error-color: #e63946;
+    --radius: 12px;
+    --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    background-color: var(--card-bg);
+    padding: 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+}
+
+header {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.subtitle {
+    color: var(--text-muted);
+    font-size: 1rem;
+}
+
+.screen {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.hidden {
+    display: none !important;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+/* Category & Button Grid */
+.button-grid, .options-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 15px;
+}
+
+.btn {
+    padding: 15px 25px;
+    font-size: 1.1rem;
+    border: 2px solid #dee2e6;
+    border-radius: var(--radius);
+    background: white;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    position: relative;
+}
+
+.btn:hover {
+    border-color: var(--primary-color);
+    background-color: #f1f3ff;
+    transform: translateY(-2px);
+}
+
+.btn.active {
+    background-color: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.category-btn {
+    text-align: center;
+    font-weight: 600;
+}
+
+.primary-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    text-align: center;
+    width: 100%;
+    font-weight: 600;
+}
+
+/* Quiz UI Update */
+.quiz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #eee;
+}
+
+.header-left, .header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#current-score {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.btn-icon {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+    color: var(--text-muted);
+    padding: 5px;
+    border-radius: 50%;
+    transition: background 0.2s;
+    line-height: 1;
+}
+
+.btn-icon:hover {
+    background-color: #f8f9fa;
+    color: var(--error-color);
+}
+
+.primary-btn.small {
+    width: auto;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+}
+
+.feedback-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+}
+
+.next-guide {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    font-style: italic;
+}
+
+#question-text {
+    font-size: 1.3rem;
+    margin-bottom: 25px;
+    line-height: 1.4;
+}
+
+/* Result Screen */
+.result-card {
+    text-align: center;
+    padding: 40px 0;
+}
+
+.final-score-circle {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    border: 8px solid var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 25px;
+}
+
+#final-score {
+    font-size: 3rem;
+    font-weight: 800;
+    color: var(--primary-color);
+    line-height: 1;
+}
+
+.score-unit {
+    font-size: 1rem;
+    color: var(--text-muted);
+}
+
+#final-stats {
+    font-size: 1.2rem;
+    color: var(--text-muted);
+}
