@@ -28,5 +28,6 @@ CREATE TABLE IF NOT EXISTS saved_recipes (
     difficulty VARCHAR(20),
     steps JSON,
     saved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_user_id (user_id) -- 성능을 위한 명시적 인덱스 추가
 );

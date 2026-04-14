@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const compression = require('compression');
 const dotenv = require('dotenv');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -13,6 +14,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 
 // 미들웨어 설정
 app.use(cors());
+app.use(compression());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.static('.'));
 
@@ -34,10 +36,44 @@ const authenticateToken = (req, res, next) => {
     });
 };
 
+// --- 유틸리티 함수: Gemini API 호출 ---
+const callGeminiAPI = async (payload, timeoutMs = 30000) => {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeoutMs);
+    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+    
+    try {
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload),
+            signal: controller.signal
+        });
+
+        clearTimeout(id);
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`Google API 오류: ${response.status} - ${errorText}`);
+        }
+
+        return await response.json();
+    } catch (error) {
+        clearTimeout(id);
+        if (error.name === 'AbortError') {
+            throw new Error('Gemini API 요청 시간이 초과되었습니다.');
+        }
+        throw error;
+    }
+};
+
 // --- 인증 API ---
 app.post('/api/auth/signup', async (req, res) => {
     try {
         const { username, email, password } = req.body;
+        if (!username || !email || !password) {
+            return res.status(400).json({ error: '모든 필드를 입력해 주세요.' });
+        }
         const hashedPassword = await bcrypt.hash(password, 10);
 
         const [result] = await pool.execute(
@@ -54,15 +90,16 @@ app.post('/api/auth/signup', async (req, res) => {
         if (error.code === 'ER_DUP_ENTRY') {
             return res.status(400).json({ error: '이미 존재하는 사용자명 또는 이메일입니다.' });
         }
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: '회원가입 중 서버 오류가 발생했습니다.' });
     }
 });
 
 app.post('/api/auth/login', async (req, res) => {
     try {
         const { email, password } = req.body;
-        const [users] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
+        if (!email || !password) return res.status(400).json({ error: '이메일과 비밀번호를 입력해 주세요.' });
 
+        const [users] = await pool.execute('SELECT * FROM users WHERE email = ?', [email]);
         if (users.length === 0) return res.status(400).json({ error: '사용자를 찾을 수 없습니다.' });
 
         const user = users[0];
@@ -73,7 +110,7 @@ app.post('/api/auth/login', async (req, res) => {
         res.json({ token, username: user.username });
     } catch (error) {
         console.error('Login Error:', error);
-        res.status(500).json({ error: error.message });
+        res.status(500).json({ error: '로그인 중 서버 오류가 발생했습니다.' });
     }
 });
 
@@ -84,9 +121,11 @@ app.get('/api/profile', authenticateToken, async (req, res) => {
             'SELECT u.username, u.email, p.dietary_preference FROM users u JOIN user_profiles p ON u.id = p.user_id WHERE u.id = ?',
             [req.user.id]
         );
+        if (profiles.length === 0) return res.status(404).json({ error: '프로필을 찾을 수 없습니다.' });
         res.json(profiles[0]);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Profile Fetch Error:', error);
+        res.status(500).json({ error: '프로필 조회 중 오류가 발생했습니다.' });
     }
 });
 
@@ -99,7 +138,8 @@ app.put('/api/profile/preferences', authenticateToken, async (req, res) => {
         );
         res.json({ message: '선호도 업데이트 성공' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Preference Update Error:', error);
+        res.status(500).json({ error: '선호도 업데이트 중 오류가 발생했습니다.' });
     }
 });
 
@@ -107,13 +147,16 @@ app.put('/api/profile/preferences', authenticateToken, async (req, res) => {
 app.post('/api/profile/save', authenticateToken, async (req, res) => {
     try {
         const { title, summary, prepTime, difficulty, steps } = req.body;
+        if (!title || !steps) return res.status(400).json({ error: '레시피 데이터가 부족합니다.' });
+
         await pool.execute(
             'INSERT INTO saved_recipes (user_id, title, summary, prep_time, difficulty, steps) VALUES (?, ?, ?, ?, ?, ?)',
             [req.user.id, title, summary, prepTime, difficulty, JSON.stringify(steps)]
         );
         res.json({ message: '레시피 저장 성공' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Recipe Save Error:', error);
+        res.status(500).json({ error: '레시피 저장 중 오류가 발생했습니다.' });
     }
 });
 
@@ -125,16 +168,19 @@ app.get('/api/profile/saved-recipes', authenticateToken, async (req, res) => {
         );
         res.json(recipes);
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Saved Recipes Fetch Error:', error);
+        res.status(500).json({ error: '저장된 레시피를 가져오는 중 오류가 발생했습니다.' });
     }
 });
 
 app.delete('/api/profile/save/:id', authenticateToken, async (req, res) => {
     try {
-        await pool.execute('DELETE FROM saved_recipes WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        const [result] = await pool.execute('DELETE FROM saved_recipes WHERE id = ? AND user_id = ?', [req.params.id, req.user.id]);
+        if (result.affectedRows === 0) return res.status(404).json({ error: '삭제할 레시피를 찾을 수 없거나 권한이 없습니다.' });
         res.json({ message: '레시피 삭제 성공' });
     } catch (error) {
-        res.status(500).json({ error: error.message });
+        console.error('Recipe Delete Error:', error);
+        res.status(500).json({ error: '레시피 삭제 중 오류가 발생했습니다.' });
     }
 });
 
@@ -145,41 +191,30 @@ app.post('/api/analyze', async (req, res) => {
     try {
         const { base64Image, mimeType } = req.body;
         if (!API_KEY) {
-            console.error('API_KEY missing');
             return res.status(500).json({ error: 'API_KEY가 설정되지 않았습니다.' });
         }
+        if (!base64Image) return res.status(400).json({ error: '이미지 데이터가 필요합니다.' });
 
         const prompt = "이 냉장고 사진에서 보이는 식재료들을 모두 나열해줘. 결과는 쉼표로 구분된 목록으로만 응답해줘. 예: 사과, 우유, 달걀";
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
         
+        const payload = {
+            contents: [{
+                parts: [
+                    { text: prompt },
+                    {
+                        inlineData: {
+                            mimeType: mimeType || 'image/jpeg',
+                            data: base64Image
+                        },
+                        mediaResolution: { level: "media_resolution_high" }
+                    }
+                ]
+            }],
+            generationConfig: { temperature: 1.0 }
+        };
+
         console.log('Gemini API에 요청 전송 중...');
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{
-                    parts: [
-                        { text: prompt },
-                        {
-                            inlineData: {
-                                mimeType: mimeType,
-                                data: base64Image
-                            },
-                            mediaResolution: { level: "media_resolution_high" }
-                        }
-                    ]
-                }],
-                generationConfig: { temperature: 1.0 }
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Google API Error Response:', errorText);
-            return res.status(response.status).json({ error: `Google API 오류: ${errorText}` });
-        }
-
-        const data = await response.json();
+        const data = await callGeminiAPI(payload);
         console.log('Gemini API 응답 수신 성공');
 
         if (data.candidates && data.candidates[0] && data.candidates[0].content) {
@@ -187,13 +222,12 @@ app.post('/api/analyze', async (req, res) => {
             console.log('분석 결과:', resultText);
             res.json({ result: resultText });
         } else {
-            console.error('Unexpected Response Structure:', JSON.stringify(data));
-            res.status(500).json({ error: 'API 응답 구조가 예상과 다릅니다.' });
+            throw new Error('API 응답 구조가 예상과 다릅니다.');
         }
 
     } catch (error) {
-        console.error('Analyze API Catch Error:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Analyze API Error:', error.message);
+        res.status(500).json({ error: error.message || '분석 중 서버 오류가 발생했습니다.' });
     }
 });
 
@@ -201,6 +235,8 @@ app.post('/api/recipes', async (req, res) => {
     console.log('--- 레시피 생성 시작 ---');
     try {
         const { ingredients } = req.body;
+        if (!ingredients) return res.status(400).json({ error: '식재료 목록이 필요합니다.' });
+
         let dietaryPreference = 'None';
 
         const authHeader = req.headers['authorization'];
@@ -210,7 +246,7 @@ app.post('/api/recipes', async (req, res) => {
                 const decoded = jwt.verify(token, JWT_SECRET);
                 const [profiles] = await pool.execute('SELECT dietary_preference FROM user_profiles WHERE user_id = ?', [decoded.id]);
                 if (profiles.length > 0) dietaryPreference = profiles[0].dietary_preference;
-            } catch (e) { console.error('Token verification failed for recipes:', e.message); }
+            } catch (e) { console.warn('유효하지 않은 토큰으로 레시피 요청 시도'); }
         }
 
         const prefPrompt = dietaryPreference !== 'None' ? `사용자의 식단 선호도는 "${dietaryPreference}"입니다. 이를 반드시 고려해줘.` : "";
@@ -230,28 +266,16 @@ app.post('/api/recipes', async (req, res) => {
           ]
         }`;
 
-        const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        const payload = {
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+                temperature: 1.0,
+                response_mime_type: "application/json"
+            }
+        };
         
         console.log('Gemini API에 레시피 요청 중...');
-        const response = await fetch(apiUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                contents: [{ parts: [{ text: prompt }] }],
-                generationConfig: {
-                    temperature: 1.0,
-                    response_mime_type: "application/json"
-                }
-            })
-        });
-
-        if (!response.ok) {
-            const errorText = await response.text();
-            console.error('Recipe API Error Response:', errorText);
-            return res.status(response.status).json({ error: `Google API 오류: ${errorText}` });
-        }
-
-        const data = await response.json();
+        const data = await callGeminiAPI(payload);
         const resultText = data.candidates[0].content.parts[0].text;
         
         const jsonMatch = resultText.match(/\{[\s\S]*\}/);
@@ -259,8 +283,8 @@ app.post('/api/recipes', async (req, res) => {
         console.log('레시피 생성 완료');
 
     } catch (error) {
-        console.error('Recipe API Catch Error:', error);
-        res.status(500).json({ error: error.message });
+        console.error('Recipe API Error:', error.message);
+        res.status(500).json({ error: error.message || '레시피 생성 중 서버 오류가 발생했습니다.' });
     }
 });
 

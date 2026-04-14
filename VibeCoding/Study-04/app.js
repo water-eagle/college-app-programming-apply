@@ -42,11 +42,27 @@ const modalSteps = document.getElementById("modal-steps");
 const closeRecipeModal = document.getElementById("close-recipe-modal");
 const saveCurrentRecipeBtn = document.getElementById("save-current-recipe-btn");
 
+// DOM 요소 - 추가
+const toast = document.getElementById("toast");
+const toastMessage = document.getElementById("toast-message");
+const toastIcon = document.getElementById("toast-icon");
+
 // 상태 변수
 let selectedFile = null;
 let detectedIngredients = "";
 let currentRecipe = null;
 let token = localStorage.getItem("token");
+
+// --- 토스트 메시지 함수 ---
+function showToast(message, type = "success") {
+    toastMessage.textContent = message;
+    toast.className = `toast show ${type}`;
+    toastIcon.textContent = type === "success" ? "✅" : "❌";
+    
+    setTimeout(() => {
+        toast.className = "toast";
+    }, 3000);
+}
 
 // 초기화
 function init() {
@@ -59,7 +75,7 @@ function updateAuthUI() {
     if (token) {
         authNav.style.display = "none";
         userNav.style.display = "flex";
-        welcomeMsg.textContent = `${localStorage.getItem("username")}님 환영합니다!`;
+        welcomeMsg.textContent = `${localStorage.getItem("username")}님 반가워요! 👋`;
         saveCurrentRecipeBtn.style.display = "block";
     } else {
         authNav.style.display = "flex";
@@ -141,11 +157,11 @@ document.getElementById("login-submit-btn").onclick = async () => {
             token = data.token;
             authModal.style.display = "none";
             updateAuthUI();
-            alert("로그인 성공!");
+            showToast("로그인되었습니다! 환영합니다.");
         } else {
-            alert(data.error);
+            showToast(data.error || "이메일이나 비밀번호를 확인해주세요.", "error");
         }
-    } catch (e) { alert("로그인 오류"); }
+    } catch (e) { showToast("로그인 중 오류가 발생했습니다.", "error"); }
 };
 
 document.getElementById("signup-submit-btn").onclick = async () => {
@@ -161,13 +177,13 @@ document.getElementById("signup-submit-btn").onclick = async () => {
         });
         const data = await res.json();
         if (res.ok) {
-            alert("회원가입 성공! 로그인 해주세요.");
+            showToast("회원가입 성공! 이제 로그인 해주세요.");
             loginFormContainer.style.display = "block";
             signupFormContainer.style.display = "none";
         } else {
-            alert(data.error);
+            showToast(data.error || "회원가입에 실패했습니다.", "error");
         }
-    } catch (e) { alert("회원가입 오류"); }
+    } catch (e) { showToast("회원가입 중 오류가 발생했습니다.", "error"); }
 };
 
 // --- 프로필 & 저장 기능 ---
@@ -192,8 +208,8 @@ document.getElementById("save-preferences-btn").onclick = async () => {
             },
             body: JSON.stringify({ preference })
         });
-        if (res.ok) alert("설정이 저장되었습니다.");
-    } catch (e) { alert("저장 실패"); }
+        if (res.ok) showToast("식단 설정이 저장되었습니다.");
+    } catch (e) { showToast("저장 중 오류가 발생했습니다.", "error"); }
 };
 
 saveCurrentRecipeBtn.onclick = async () => {
@@ -207,8 +223,12 @@ saveCurrentRecipeBtn.onclick = async () => {
             },
             body: JSON.stringify(currentRecipe)
         });
-        if (res.ok) alert("레시피가 저장되었습니다!");
-    } catch (e) { alert("저장 실패"); }
+        if (res.ok) {
+            showToast("레시피가 저장되었습니다! ❤️");
+            saveCurrentRecipeBtn.textContent = "저장됨 ✅";
+            saveCurrentRecipeBtn.classList.add("saved");
+        }
+    } catch (e) { showToast("저장에 실패했습니다.", "error"); }
 };
 
 async function fetchSavedRecipes() {
@@ -250,8 +270,11 @@ window.deleteRecipe = async (event, id) => {
             method: "DELETE",
             headers: { "Authorization": `Bearer ${token}` }
         });
-        if (res.ok) fetchSavedRecipes();
-    } catch (e) { alert("삭제 실패"); }
+        if (res.ok) {
+            showToast("레시피가 삭제되었습니다.");
+            fetchSavedRecipes();
+        }
+    } catch (e) { showToast("삭제 중 오류가 발생했습니다.", "error"); }
 };
 
 // --- 기존 기능 (분석 & 추천) ---
@@ -279,30 +302,86 @@ function handleFiles(files) {
 
 analyzeBtn.onclick = async () => {
     if (!selectedFile) return;
-    loadingSpinner.style.display = "block";
-    loadingSpinner.querySelector("p").textContent = "식재료 분석 중...";
+    
+    // UI 업데이트: 로딩 및 스캔 시작
+    loadingSpinner.style.display = "flex";
+    loadingSpinner.querySelector("p").textContent = "AI가 식재료를 분석하고 있어요...";
+    dropZone.classList.add("scanning");
     analyzeBtn.disabled = true;
+    
     try {
-        const base64Data = await fileToBase64(selectedFile);
+        const resizedBase64 = await resizeImage(selectedFile, 1024, 1024);
         const res = await fetch("/api/analyze", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ base64Image: base64Data, mimeType: selectedFile.type })
+            body: JSON.stringify({ 
+                base64Image: resizedBase64.split(",")[1], 
+                mimeType: "image/jpeg"
+            })
         });
         const data = await res.json();
-        detectedIngredients = data.result;
-        displayIngredients(data.result);
-        findRecipesBtn.style.display = "block";
-        ingredientTitle.style.display = "block";
-    } catch (e) { alert("분석 오류"); }
-    finally { loadingSpinner.style.display = "none"; analyzeBtn.disabled = false; }
+        
+        if (data.result) {
+            detectedIngredients = data.result;
+            displayIngredients(data.result);
+            findRecipesBtn.style.display = "flex";
+            ingredientTitle.style.display = "block";
+            showToast("식재료 분석 완료!");
+        } else {
+            showToast("식재료를 찾지 못했습니다. 다시 시도해 주세요.", "error");
+        }
+    } catch (e) { 
+        console.error("Analysis Error:", e);
+        showToast("분석 중 오류가 발생했습니다.", "error"); 
+    }
+    finally { 
+        loadingSpinner.style.display = "none"; 
+        dropZone.classList.remove("scanning");
+        analyzeBtn.disabled = false; 
+    }
 };
+
+async function resizeImage(file, maxWidth, maxHeight) {
+    return new Promise((resolve) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height *= maxWidth / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width *= maxHeight / height;
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                resolve(canvas.toDataURL('image/jpeg', 0.8)); // 80% 품질로 JPEG 변환
+            };
+        };
+    });
+}
 
 findRecipesBtn.onclick = async () => {
     if (!detectedIngredients) return;
-    loadingSpinner.style.display = "block";
-    loadingSpinner.querySelector("p").textContent = "레시피 생성 중...";
+    
+    loadingSpinner.style.display = "flex";
+    loadingSpinner.querySelector("p").textContent = "맛있는 레시피를 생각하고 있어요... 👩‍🍳";
     findRecipesBtn.disabled = true;
+    
     try {
         const headers = { "Content-Type": "application/json" };
         if (token) headers["Authorization"] = `Bearer ${token}`;
@@ -313,29 +392,37 @@ findRecipesBtn.onclick = async () => {
             body: JSON.stringify({ ingredients: detectedIngredients })
         });
         const data = await res.json();
-        renderRecipes(data.recipes);
-    } catch (e) { alert("추천 오류"); }
-    finally { loadingSpinner.style.display = "none"; findRecipesBtn.disabled = false; }
+        
+        if (data.recipes && data.recipes.length > 0) {
+            renderRecipes(data.recipes);
+            showToast("맞춤 레시피가 준비되었습니다!");
+            // 스크롤 이동
+            setTimeout(() => {
+                recipeContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 100);
+        } else {
+            showToast("추천할 레시피를 찾지 못했습니다.", "error");
+        }
+    } catch (e) { 
+        showToast("레시피 추천 중 오류가 발생했습니다.", "error"); 
+    }
+    finally { 
+        loadingSpinner.style.display = "none"; 
+        findRecipesBtn.disabled = false; 
+    }
 };
-
-async function fileToBase64(file) {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result.split(",")[1]);
-        reader.onerror = (e) => reject(e);
-    });
-}
 
 function displayIngredients(text) {
     ingredientList.innerHTML = "";
     const ingredients = text.split(",").map(i => i.trim());
-    ingredients.forEach(item => {
+    ingredients.forEach((item, index) => {
         if (item) {
-            const tag = document.createElement("span");
-            tag.className = "ingredient-tag";
-            tag.textContent = item;
-            ingredientList.appendChild(tag);
+            setTimeout(() => {
+                const tag = document.createElement("span");
+                tag.className = "ingredient-tag";
+                tag.textContent = item;
+                ingredientList.appendChild(tag);
+            }, index * 100);
         }
     });
 }
@@ -362,6 +449,11 @@ function openRecipeModal(recipe) {
     modalTitle.textContent = recipe.title;
     modalMeta.textContent = `⏱ ${recipe.prepTime} | 📊 난이도: ${recipe.difficulty}`;
     modalSteps.innerHTML = "";
+    
+    // 저장 버튼 상태 초기화
+    saveCurrentRecipeBtn.textContent = "이 레시피 저장하기 ⭐";
+    saveCurrentRecipeBtn.classList.remove("saved");
+    
     recipe.steps.forEach((step, i) => {
         const div = document.createElement("div");
         div.className = "step-item";
