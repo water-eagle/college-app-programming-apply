@@ -68,6 +68,13 @@ function showToast(message, type = "success") {
 function init() {
     updateAuthUI();
     if (token) fetchUserProfile();
+    
+    // 로고 클릭 시 홈으로 이동
+    const logo = document.querySelector(".logo");
+    if (logo) {
+        logo.style.cursor = "pointer";
+        logo.onclick = () => showSection("main");
+    }
 }
 
 // --- 인증 UI 업데이트 ---
@@ -140,9 +147,18 @@ function showSection(sectionId) {
 }
 
 // --- 인증 처리 ---
-document.getElementById("login-submit-btn").onclick = async () => {
-    const email = document.getElementById("login-email").value;
-    const password = document.getElementById("login-password").value;
+const loginSubmitBtn = document.getElementById("login-submit-btn");
+const loginEmailInput = document.getElementById("login-email");
+const loginPasswordInput = document.getElementById("login-password");
+
+const signupSubmitBtn = document.getElementById("signup-submit-btn");
+const signupUsernameInput = document.getElementById("signup-username");
+const signupEmailInput = document.getElementById("signup-email");
+const signupPasswordInput = document.getElementById("signup-password");
+
+async function handleLogin() {
+    const email = loginEmailInput.value;
+    const password = loginPasswordInput.value;
 
     try {
         const res = await fetch("/api/auth/login", {
@@ -162,12 +178,12 @@ document.getElementById("login-submit-btn").onclick = async () => {
             showToast(data.error || "이메일이나 비밀번호를 확인해주세요.", "error");
         }
     } catch (e) { showToast("로그인 중 오류가 발생했습니다.", "error"); }
-};
+}
 
-document.getElementById("signup-submit-btn").onclick = async () => {
-    const username = document.getElementById("signup-username").value;
-    const email = document.getElementById("signup-email").value;
-    const password = document.getElementById("signup-password").value;
+async function handleSignup() {
+    const username = signupUsernameInput.value;
+    const email = signupEmailInput.value;
+    const password = signupPasswordInput.value;
 
     try {
         const res = await fetch("/api/auth/signup", {
@@ -184,7 +200,23 @@ document.getElementById("signup-submit-btn").onclick = async () => {
             showToast(data.error || "회원가입에 실패했습니다.", "error");
         }
     } catch (e) { showToast("회원가입 중 오류가 발생했습니다.", "error"); }
-};
+}
+
+loginSubmitBtn.onclick = handleLogin;
+
+[loginEmailInput, loginPasswordInput].forEach(input => {
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleLogin();
+    });
+});
+
+signupSubmitBtn.onclick = handleSignup;
+
+[signupUsernameInput, signupEmailInput, signupPasswordInput].forEach(input => {
+    input.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") handleSignup();
+    });
+});
 
 // --- 프로필 & 저장 기능 ---
 async function fetchUserProfile() {
@@ -294,6 +326,8 @@ function handleFiles(files) {
             imagePreview.style.display = "block";
             const instructionText = dropZone.querySelector("p");
             if (instructionText) instructionText.style.display = "none";
+            const uploadIcon = dropZone.querySelector(".upload-icon");
+            if (uploadIcon) uploadIcon.style.display = "none";
             analyzeBtn.disabled = false;
         };
         reader.readAsDataURL(selectedFile);
@@ -454,12 +488,25 @@ function openRecipeModal(recipe) {
     saveCurrentRecipeBtn.textContent = "이 레시피 저장하기 ⭐";
     saveCurrentRecipeBtn.classList.remove("saved");
     
-    recipe.steps.forEach((step, i) => {
-        const div = document.createElement("div");
-        div.className = "step-item";
-        div.innerHTML = `<span class="step-number">${i + 1}.</span> ${step}`;
-        modalSteps.appendChild(div);
-    });
+    // steps 데이터가 문자열인 경우 파싱 (DB에서 가져온 경우 대비)
+    let steps = recipe.steps;
+    if (typeof steps === "string") {
+        try {
+            steps = JSON.parse(steps);
+        } catch (e) {
+            console.error("Steps parsing error:", e);
+            steps = [];
+        }
+    }
+    
+    if (Array.isArray(steps)) {
+        steps.forEach((step, i) => {
+            const div = document.createElement("div");
+            div.className = "step-item";
+            div.innerHTML = `<span class="step-number">${i + 1}.</span> ${step}`;
+            modalSteps.appendChild(div);
+        });
+    }
     recipeModal.style.display = "block";
 }
 
