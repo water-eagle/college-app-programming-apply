@@ -559,3 +559,7 @@ hs_err_pid*
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.toptal.com/developers/gitignore/api/linux,macos,python,windows,webstorm,pycharm+all,androidstudio,visualstudiocode
+
+### 개인 추가 ###
+.npm-cache
+.playwright-browsers
